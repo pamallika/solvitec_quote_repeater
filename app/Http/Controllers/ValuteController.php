@@ -8,6 +8,8 @@ use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
+use function App\Helpers\errResponse;
+use function App\Helpers\okResponse;
 
 class ValuteController extends Controller
 {
@@ -16,7 +18,7 @@ class ValuteController extends Controller
     public function retranslate(Request $request)
     {
         if (!$date = $request->get('date_req')) {
-            return response(['data' => [], 'error' => 'Param date undefined'], ResponseAlias::HTTP_NOT_FOUND);
+            return errResponse('Param date undefined', ResponseAlias::HTTP_NOT_FOUND);
         }
 
         $dateCarbon = Carbon::createFromFormat('d/m/Y', $date);
@@ -24,18 +26,18 @@ class ValuteController extends Controller
 
         /** @var Valute $valute */
         if ($dateCarbon->isPast() && $valute = Valute::where('date', $formatedDate)->first()) {
-            return response($valute->toArray());
+            return okResponse($valute->toArray());
         }
 
         $client = new Client(['base_uri' => self::CBR_BASE_URI]);
         $response = $client->request('GET', '/scripts/XML_daily.asp', ['query' => ['date_req' => $date]]);
         if ($response->getStatusCode() !== ResponseAlias::HTTP_OK) {
-            return response(['data' => [], 'error' => 'CBR server is not responding, try again later'], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+            return errResponse('CBR server is not responding, try again later');
         }
 
         $resultXml = simplexml_load_string($response->getBody());
         if ($resultXml->count() < 1) {
-            return response('', ResponseAlias::HTTP_NOT_FOUND);
+            return errResponse('', ResponseAlias::HTTP_NOT_FOUND);
         }
 
         $resultData = CbrAdapter::parse($resultXml);
@@ -44,6 +46,6 @@ class ValuteController extends Controller
             Valute::create(['name' => $resultData['name'], 'date' => $formatedDate, 'valutes' => $resultData['valutes']]);
         }
 
-        return response($resultData);
+        return okResponse($resultData);
     }
 }
