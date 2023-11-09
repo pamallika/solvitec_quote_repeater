@@ -5,9 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegistrationRequest;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
+use function App\Helpers\errResponse;
+use function App\Helpers\okResponse;
 
 class AuthController extends Controller
 {
@@ -18,7 +19,7 @@ class AuthController extends Controller
         $data['api_token'] = User::generateApiToken();
         User::firstOrCreate(['login' => $data['login']], $data);
 
-        return $data;
+        return okResponse($data);
     }
 
     public function login(LoginRequest $request)
@@ -28,12 +29,10 @@ class AuthController extends Controller
             /** @var User $user */
             $user = User::where(['login' => $data['login']])->firstOrFail();
 
-            return response(['data' => [
-                'api_token' => $user->getApiToken()]
-            ]);
+            return okResponse(['api_token' => $user->getApiToken()]);
         }
 
-        return response('HTTP_UNAUTHORIZED', ResponseAlias::HTTP_UNAUTHORIZED);
+        return errResponse('HTTP_UNAUTHORIZED', ResponseAlias::HTTP_UNAUTHORIZED);
     }
 
 }
