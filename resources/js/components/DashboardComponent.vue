@@ -46,14 +46,10 @@ export default {
                 });
             },
             cbrRetranslate() {
-
                 let queryParam = '?date_req=' + this.formatdateToQueryParam();
                 api.get('/api/cbr/retranslate' + queryParam)
                 .then(res => {
-                   let resData = res.data.data;
-                   this.quoteDate = resData.date;
-                  this.quoteName = resData.name;
-                  this.quoteValutes = JSON.parse(resData.valutes)
+                  this.quoteValutes = res.data.data
                 });
             },
 
