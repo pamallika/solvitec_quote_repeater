@@ -5,27 +5,32 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Valute extends Model
+class Quote extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'quote_id',
-        'num_code',
-        'char_code',
+        'date',
         'name',
-        'value',
-        'vunit_rate',
     ];
 
-    public function quote()
+    protected $casts = [
+        'date' => 'date:d.m.Y',
+    ];
+
+    public function valutes()
     {
-        return $this->belongsTo(Quote::class);
+        return $this->hasMany(Valute::class);
     }
 
     public function getId(): int
     {
         return $this->getAttribute('id');
+    }
+
+    public function getDate(): string
+    {
+        return $this->getAttribute('date');
     }
 
     public function getName(): string
