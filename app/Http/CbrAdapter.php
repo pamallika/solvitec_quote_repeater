@@ -12,9 +12,14 @@ class CbrAdapter implements XmlAdapterInterface
         $result['date'] = (string)$xml->attributes()['Date'];
         $result['name'] = (string)$xml->attributes()['name'];
         foreach ($xml as $valute) {
-            $result['valutes'][] = $valute;
+            $result['valutes'][] = [
+                'num_code' => (string)$valute->NumCode,
+                'char_code' => (string)$valute->CharCode,
+                'name' => (string)$valute->Name,
+                'value' => (string)$valute->Value,
+                'vunit_rate' => (string)$valute->VunitRate,
+            ];
         }
-        $result['valutes'] = json_encode($result['valutes']);
 
         return $result;
     }

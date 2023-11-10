@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\CbrAdapter;
+use App\Models\Quote;
 use App\Models\Valute;
 use Carbon\Exceptions\InvalidFormatException;
 use GuzzleHttp\Client;
@@ -28,15 +29,15 @@ class ValuteController extends Controller
             return errResponse('date_req format must be ' . 'd/m/Y ' . $e->getMessage(), ResponseAlias::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $formatedDate = $dateCarbon->format('Y - m - d');
+        $formatedDate = $dateCarbon->format('Y-m-d');
 
-        /** @var Valute $valute */
-        if ($dateCarbon->isPast() && $valute = Valute::where('date', $formatedDate)->first()) {
-            return okResponse($valute->toArray());
+        /** @var Quote $quote */
+        if ($dateCarbon->isPast() && $quote = Quote::where('date', $formatedDate)->first()) {
+            return okResponse($quote->valutes->toArray());
         }
 
         $client = new Client(['base_uri' => self::CBR_BASE_URI]);
-        $response = $client->request('GET', ' / scripts / XML_daily . asp', ['query' => ['date_req' => $date]]);
+        $response = $client->request('GET', '/scripts/XML_daily.asp', ['query' => ['date_req' => $date]]);
         if ($response->getStatusCode() !== ResponseAlias::HTTP_OK) {
             return errResponse('CBR server is not responding, try again later');
         }
@@ -48,10 +49,15 @@ class ValuteController extends Controller
 
         $resultData = CbrAdapter::parse($resultXml);
 
-        if ($dateCarbon->isPast()) {
-            Valute::create(['name' => $resultData['name'], 'date' => $formatedDate, 'valutes' => $resultData['valutes']]);
+        if ($dateCarbon->isPast() && !$dateCarbon->isToday()) {
+            /** @var Quote $quote */
+            $quote = Quote::firstOrCreate(['name' => 'asdasd', 'date' => $formatedDate]);
+            foreach ($resultData['valutes'] as $valute) {
+                $valute['quote_id'] = $quote->getId();
+                Valute::create($valute);
+            }
         }
 
-        return okResponse($resultData);
+        return okResponse($resultData['valutes']);
     }
 }
