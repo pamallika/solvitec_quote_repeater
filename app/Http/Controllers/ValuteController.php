@@ -28,7 +28,9 @@ class ValuteController extends Controller
         } catch (InvalidFormatException $e) {
             return errResponse('date_req format must be ' . 'd/m/Y ' . $e->getMessage(), ResponseAlias::HTTP_UNPROCESSABLE_ENTITY);
         }
-
+        if($dateCarbon->isFuture()) {
+            return okResponse([]);
+        }
         $formatedDate = $dateCarbon->format('Y-m-d');
 
         /** @var Quote $quote */
